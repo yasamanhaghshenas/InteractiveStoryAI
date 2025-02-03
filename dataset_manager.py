@@ -1,7 +1,7 @@
 import json
 
 class DatasetManager:
-    def init(self, input_file, output_file):
+    def __init__(self, input_file, output_file):
         """
         Initializes the DatasetManager.
 
@@ -11,56 +11,59 @@ class DatasetManager:
         """
         self.input_file = input_file
         self.output_file = output_file
-        self.sections = ["introduction", "challenge", "resolution"]
+        
+        # Expanded sections based on Propp’s functions
+        self.sections = [
+            "introduction", "hero_departure", "first_challenge", 
+            "mentor_appearance", "main_conflict", "climax", "resolution"
+        ]
 
     def process_text(self):
         """
         Reads a text file and converts it into a structured dataset.
 
         Returns:
-            list: A list of dictionaries, where each dictionary represents a story.
+            list: A list of dictionaries, where each dictionary represents a structured story.
         """
         dataset = []
         try:
-            with open(self.input_file, "r") as file:
+            with open(self.input_file, "r", encoding="utf-8") as file:
                 lines = file.readlines()
 
             for line in lines:
                 line = line.strip()
                 if line:  # Ignore empty lines
-                    story_parts = line.split(".")
+                    story_parts = line.split(". ")
                     story_parts = [part.strip() for part in story_parts if part.strip()]  # Remove empty parts
                     
                     # Ensure the story has enough parts for all sections
-                    if len(story_parts) >= len(self.sections):
-                        story = {self.sections[i]: story_parts[i] for i in range(len(self.sections))}
-                        dataset.append(story)
-                    else:
-                        print(f"Warning: Skipping incomplete story: {line}")
+                    story = {self.sections[i]: story_parts[i] if i < len(story_parts) else "" for i in range(len(self.sections))}
+                    dataset.append(story)
 
         except FileNotFoundError:
-            print(f"Error: Input file '{self.input_file}' not found.")
+            print(f"❌ Error: Input file '{self.input_file}' not found.")
         except Exception as e:
-            print(f"Error processing text: {e}")
+            print(f"❌ Error processing text: {e}")
 
         return dataset
 
     def save_to_json(self, dataset):
         """
-        Saves the processed dataset to a JSON file.
+        Saves the processed dataset to a JSONL file.
 
         Args:
             dataset (list): The dataset to save.
         """
         try:
-            with open(self.output_file, "w") as file:
-                json.dump(dataset, file, indent=4)
-            print(f"Dataset saved to {self.output_file}")
+            with open(self.output_file, "w", encoding="utf-8") as file:
+                for entry in dataset:
+                    file.write(json.dumps(entry, ensure_ascii=False) + "\n")  # JSONL format (one JSON per line)
+            print(f"✅ Dataset saved to {self.output_file}")
         except Exception as e:
-            print(f"Error saving dataset to JSON: {e}")
+            print(f"❌ Error saving dataset: {e}")
 
 # Example usage:
-if name == "main":
-    manager = DatasetManager("story.txt", "dataset.json")
+if __name__ == "__main__":
+    manager = DatasetManager("story.txt", "dataset.jsonl")
     dataset = manager.process_text()
     manager.save_to_json(dataset)
